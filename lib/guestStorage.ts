@@ -64,4 +64,3 @@ export function createGuestNote(folderId: string | null): Note {
     updated_at: now
   };
 }
-

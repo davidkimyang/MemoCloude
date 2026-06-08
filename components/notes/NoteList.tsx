@@ -38,4 +38,3 @@ export function NoteList({ notes, selectedNoteId, loading, onSelect }: NoteListP
     </div>
   );
 }
-

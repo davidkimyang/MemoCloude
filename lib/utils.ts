@@ -23,5 +23,6 @@ export function previewText(content: string | null | undefined) {
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
   return text ? text.slice(0, 90) : "내용 없음";
 }

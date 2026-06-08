@@ -180,4 +180,3 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
     reloadNotes: loadNotes
   };
 }
-
