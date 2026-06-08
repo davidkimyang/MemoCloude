@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Apple, Cloud, Loader2 } from "lucide-react";
+import { Cloud, Loader2 } from "lucide-react";
 import type { Provider } from "@supabase/supabase-js";
 import { hasSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 type AuthFormProps = {
   mode: "login" | "signup";
 };
+
+type OAuthProvider = Provider | "naver";
 
 function GoogleMark() {
   return (
@@ -22,6 +24,14 @@ function GoogleMark() {
   );
 }
 
+function NaverMark() {
+  return (
+    <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-sm bg-[#03c75a] text-[13px] font-black leading-none text-white">
+      N
+    </span>
+  );
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -29,7 +39,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null);
   const isSignup = mode === "signup";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -63,7 +73,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     router.push("/app");
   }
 
-  async function signInWithProvider(provider: Provider) {
+  async function signInWithProvider(provider: OAuthProvider) {
     setMessage(null);
 
     if (!hasSupabaseEnv) {
@@ -73,7 +83,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     setOauthLoading(provider);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: provider as Provider,
       options: {
         redirectTo: `${window.location.origin}/app`
       }
@@ -158,13 +168,13 @@ export function AuthForm({ mode }: AuthFormProps) {
               Google로 계속하기
             </button>
             <button
-              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333] transition hover:bg-[#fbfaf7] disabled:opacity-60"
+              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#03c75a] bg-[#03c75a] font-semibold text-white transition hover:bg-[#02b351] disabled:opacity-60"
               disabled={loading || Boolean(oauthLoading)}
-              onClick={() => void signInWithProvider("apple")}
+              onClick={() => void signInWithProvider("naver")}
               type="button"
             >
-              {oauthLoading === "apple" ? <Loader2 className="animate-spin" size={18} /> : <Apple size={20} fill="currentColor" />}
-              Apple로 계속하기
+              {oauthLoading === "naver" ? <Loader2 className="animate-spin" size={18} /> : <NaverMark />}
+              Naver로 계속하기
             </button>
           </div>
 
