@@ -83,7 +83,8 @@ export function AuthForm({ mode }: AuthFormProps) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/app`
+        redirectTo: `${window.location.origin}/app`,
+        scopes: provider === "kakao" ? "profile_nickname profile_image" : undefined
       }
     });
 
