@@ -1,13 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { X } from "lucide-react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Topbar } from "@/components/layout/Topbar";
-import { NoteList } from "@/components/notes/NoteList";
+import { Cloud, FilePlus2, LogIn, LogOut, Sparkles } from "lucide-react";
 import { NoteEditor } from "@/components/notes/NoteEditor";
-import { EmptyState } from "@/components/notes/EmptyState";
+import { NoteList } from "@/components/notes/NoteList";
 import { hasSupabaseEnv, supabase } from "@/lib/supabase/client";
 import { useFolders } from "@/hooks/useFolders";
 import { useNotes } from "@/hooks/useNotes";
@@ -20,11 +18,9 @@ type AppShellProps = {
 export function AppShell({ initialTrash = false }: AppShellProps) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<FolderFilter>(initialTrash ? "trash" : "all");
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { folders, createFolder, renameFolder, deleteFolder } = useFolders(user);
-  const notesApi = useNotes(user, selectedFilter, search);
+  const [selectedFilter] = useState<FolderFilter>(initialTrash ? "trash" : "all");
+  const { folders } = useFolders(user);
+  const notesApi = useNotes(user, selectedFilter, "");
   const trashMode = selectedFilter === "trash";
   const isGuest = !user;
 
@@ -40,93 +36,84 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
     });
   }, []);
 
-  const selectedFolderId = useMemo(() => {
-    if (["all", "pinned", "recent", "trash"].includes(selectedFilter)) return null;
-    return selectedFilter;
-  }, [selectedFilter]);
+  const selectedFolderId = useMemo(() => null, []);
 
   async function createNote() {
     const note = await notesApi.createNote(selectedFolderId);
-    if (note && trashMode) setSelectedFilter("all");
+    if (note) notesApi.setSelectedNoteId(note.id);
   }
 
-  function selectFilter(filter: FolderFilter) {
-    setSelectedFilter(filter);
-    setMobileNavOpen(false);
+  async function logout() {
+    if (isGuest) {
+      window.location.href = "/login";
+      return;
+    }
+
+    await supabase.auth.signOut();
+    window.location.href = "/login";
   }
 
   if (authLoading) {
-    return <main className="flex min-h-screen items-center justify-center bg-paper text-muted">인증 상태 확인 중...</main>;
+    return <main className="flex min-h-screen items-center justify-center bg-[#fbfaf7] text-[#6f6258]">인증 상태 확인 중...</main>;
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-paper text-ink">
-      <div className="grid h-full grid-cols-1 lg:grid-cols-[280px_minmax(310px,420px)_1fr]">
-        <div className="hidden min-h-0 lg:block">
-          <Sidebar
-            folders={folders}
-            selectedFilter={selectedFilter}
-            isGuest={isGuest}
-            userEmail={user?.email}
-            onSelect={selectFilter}
-            onCreateFolder={createFolder}
-            onRenameFolder={renameFolder}
-            onDeleteFolder={deleteFolder}
-          />
-        </div>
+    <main className="min-h-screen bg-[#fbfaf7] text-[#171717]">
+      <header className="flex h-20 items-center justify-between px-8 lg:px-20">
+        <Link className="flex items-center gap-3" href="/">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#00a82d] text-white">
+            <Cloud size={24} />
+          </span>
+          <span className="text-3xl font-bold tracking-normal">MemoCloud</span>
+        </Link>
+        <nav className="flex items-center gap-8 text-base font-medium">
+          <span className="hidden max-w-[240px] truncate text-[#6f6258] sm:inline" title={isGuest ? "비회원 모드" : user?.email || ""}>
+            {isGuest ? "비회원 모드" : user?.email}
+          </span>
+          <button className="hover:text-[#00a82d]" onClick={logout} type="button">
+            {isGuest ? "로그인" : "로그아웃"}
+          </button>
+        </nav>
+      </header>
 
-        {mobileNavOpen ? (
-          <div className="fixed inset-0 z-40 bg-black/20 lg:hidden">
-            <div className="h-full w-[min(88vw,320px)] bg-paper shadow-soft">
-              <div className="flex justify-end p-3">
-                <button className="rounded-xl border border-line bg-white p-2" onClick={() => setMobileNavOpen(false)} title="닫기" type="button">
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="h-[calc(100%-56px)]">
-                <Sidebar
-                  folders={folders}
-                  selectedFilter={selectedFilter}
-                  isGuest={isGuest}
-                  userEmail={user?.email}
-                  onSelect={selectFilter}
-                  onCreateFolder={createFolder}
-                  onRenameFolder={renameFolder}
-                  onDeleteFolder={deleteFolder}
-                />
-              </div>
+      <section className="grid min-h-[calc(100vh-80px)] gap-2 px-2 pb-6 lg:grid-cols-[292px_1fr]">
+        <aside className="flex min-h-0 flex-col rounded-xl border border-[#e6e1d9] bg-white p-5 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-bold">메모</h1>
+            <span className="text-sm text-[#6f6258]">{notesApi.notes.length} 메모</span>
+          </div>
+          <button className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#00a82d] font-bold text-white transition hover:bg-[#008f26]" onClick={createNote} type="button">
+            <FilePlus2 size={18} />새 메모 만들기
+          </button>
+
+          <div className="mt-8 min-h-0 flex-1 overflow-hidden">
+            <NoteList notes={notesApi.notes} selectedNoteId={notesApi.selectedNoteId} loading={notesApi.loading} onSelect={notesApi.setSelectedNoteId} />
+          </div>
+
+          <div className="mt-5 space-y-3">
+            <p className="text-xs font-semibold text-[#6f6258]">추가 기능</p>
+            <div className="rounded-xl border border-[#e6e1d9] bg-white p-4 shadow-sm">
+              <Sparkles className="text-[#289fd7]" size={18} />
+              <h3 className="mt-2 text-sm font-bold">AI 편집</h3>
+              <p className="mt-2 text-xs leading-5 text-[#4f4f4f]">작성한 메모를 다듬는 기능은 다음 단계에서 제공됩니다.</p>
             </div>
           </div>
-        ) : null}
+        </aside>
 
-        <section className={`${notesApi.selectedNote ? "hidden md:grid" : "grid"} min-h-0 grid-rows-[64px_1fr] border-r border-line`}>
-          <Topbar
-            search={search}
-            onSearch={setSearch}
-            onNewNote={createNote}
-            onOpenMobileNav={() => setMobileNavOpen(true)}
-          />
-          <NoteList notes={notesApi.notes} selectedNoteId={notesApi.selectedNoteId} loading={notesApi.loading} onSelect={notesApi.setSelectedNoteId} />
-        </section>
-
-        <section className={`${notesApi.selectedNote ? "block" : "hidden md:block"} min-h-0 bg-white`}>
+        <section className="min-h-[680px] overflow-hidden rounded-xl border border-[#e6e1d9] bg-white shadow-sm">
           {notesApi.error ? <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{notesApi.error}</div> : null}
-          {notesApi.notes.length || notesApi.selectedNote ? (
-            <NoteEditor
-              note={notesApi.selectedNote}
-              folders={folders}
-              trashMode={trashMode}
-              onBack={() => notesApi.setSelectedNoteId(null)}
-              onUpdate={notesApi.updateNote}
-              onDelete={notesApi.moveToTrash}
-              onRestore={notesApi.restoreNote}
-              onPermanentDelete={notesApi.permanentlyDeleteNote}
-            />
-          ) : (
-            <EmptyState title="검색 결과가 없습니다." />
-          )}
+          <NoteEditor
+            note={notesApi.selectedNote}
+            folders={folders}
+            trashMode={trashMode}
+            onUpdate={notesApi.updateNote}
+            onDelete={notesApi.moveToTrash}
+            onRestore={notesApi.restoreNote}
+            onPermanentDelete={notesApi.permanentlyDeleteNote}
+          />
         </section>
-      </div>
+      </section>
     </main>
   );
 }
+

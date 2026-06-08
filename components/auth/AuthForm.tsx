@@ -24,7 +24,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     setMessage(null);
 
     if (!hasSupabaseEnv) {
-      setMessage(".env.local에 Supabase URL과 anon key를 먼저 설정해주세요.");
+      setMessage("Supabase 환경 변수를 먼저 설정해주세요.");
       return;
     }
 
@@ -37,7 +37,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     const result = isSignup
       ? await supabase.auth.signUp({ email, password })
       : await supabase.auth.signInWithPassword({ email, password });
-
     setLoading(false);
 
     if (result.error) {
@@ -46,7 +45,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (isSignup) {
-      setMessage("가입이 완료되었습니다. 이메일 확인 설정이 켜져 있다면 메일함을 확인해주세요.");
+      setMessage("가입이 완료되었습니다. 바로 로그인하거나 이메일 확인이 필요한 경우 메일함을 확인해주세요.");
       return;
     }
 
@@ -54,73 +53,101 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper px-4 py-12 text-ink">
-      <section className="w-full max-w-md rounded-[28px] border border-line bg-white p-8 shadow-soft">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-white">
-            <Cloud size={22} />
-          </div>
-          <div>
-            <p className="text-sm text-muted">MemoCloud</p>
-            <h1 className="text-2xl font-semibold">{isSignup ? "회원가입" : "로그인"}</h1>
-          </div>
-        </div>
+    <main className="relative min-h-screen overflow-hidden bg-[#fbfaf7] text-[#171717]">
+      <div className="pointer-events-none absolute right-[-90px] top-[-80px] h-72 w-72 rounded-full bg-[#c78df2]" />
+      <div className="pointer-events-none absolute bottom-[-110px] right-[70px] h-64 w-64 rounded-full bg-[#ff9d21]" />
+      <div className="pointer-events-none absolute left-[58%] top-[-70px] h-44 w-44 rotate-45 bg-[#8bd33f]" />
+      <div className="grid min-h-screen lg:grid-cols-[minmax(420px,720px)_1fr]">
+        <section className="flex items-center justify-center px-6 py-14">
+          <div className="w-full max-w-[520px]">
+            <Link className="mb-16 inline-flex items-center gap-3" href="/">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#00a82d] text-white">
+                <Cloud size={25} />
+              </span>
+              <span className="text-2xl font-bold">MemoCloud</span>
+            </Link>
 
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <label className="block">
-            <span className="text-sm font-medium">이메일</span>
-            <input
-              className="mt-2 w-full rounded-2xl border border-line px-4 py-3 outline-none transition focus:border-accent"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">비밀번호</span>
-            <input
-              className="mt-2 w-full rounded-2xl border border-line px-4 py-3 outline-none transition focus:border-accent"
-              type="password"
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </label>
-          {isSignup ? (
-            <label className="block">
-              <span className="text-sm font-medium">비밀번호 확인</span>
+            <h1 className="text-4xl font-bold tracking-normal">{isSignup ? "MemoCloud에 오신 것을 환영합니다!" : "다시 오신 것을 환영합니다!"}</h1>
+            <p className="mt-4 text-base text-[#4f4f4f]">{isSignup ? "가입하여 메모를 계정에 안전하게 저장하세요." : "로그인하여 저장된 메모를 이어서 작성하세요."}</p>
+
+            <form className="mt-9 space-y-4" onSubmit={onSubmit}>
               <input
-                className="mt-2 w-full rounded-2xl border border-line px-4 py-3 outline-none transition focus:border-accent"
-                type="password"
-                minLength={6}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                className="h-14 w-full rounded-md border border-[#5f6cff] bg-white px-4 text-base outline-none focus:ring-2 focus:ring-[#5f6cff]/20"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="이메일 주소"
                 required
               />
-            </label>
-          ) : null}
+              <input
+                className="h-14 w-full rounded-md border border-[#d8d8d8] bg-white px-4 text-base outline-none focus:border-[#5f6cff]"
+                type="password"
+                minLength={6}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="비밀번호"
+                required
+              />
+              {isSignup ? (
+                <input
+                  className="h-14 w-full rounded-md border border-[#d8d8d8] bg-white px-4 text-base outline-none focus:border-[#5f6cff]"
+                  type="password"
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="비밀번호 확인"
+                  required
+                />
+              ) : null}
 
-          {message ? <p className="rounded-2xl bg-paper px-4 py-3 text-sm text-muted">{message}</p> : null}
+              {message ? <p className="rounded-lg bg-white px-4 py-3 text-sm text-[#4f4f4f] shadow-sm">{message}</p> : null}
 
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ink px-4 py-3 font-semibold text-white transition hover:bg-black disabled:opacity-60"
-            disabled={loading}
-            type="submit"
-          >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-            {isSignup ? "계정 만들기" : "로그인"}
-          </button>
-        </form>
+              <button
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[#171717] font-bold text-white transition hover:bg-black disabled:bg-[#c9c9c9]"
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? <Loader2 className="animate-spin" size={18} /> : null}
+                {isSignup ? "계속" : "로그인"}
+              </button>
+            </form>
 
-        <p className="mt-6 text-center text-sm text-muted">
-          {isSignup ? "이미 계정이 있나요?" : "처음 사용하시나요?"}{" "}
-          <Link className="font-semibold text-ink" href={isSignup ? "/login" : "/signup"}>
-            {isSignup ? "로그인" : "회원가입"}
-          </Link>
-        </p>
-      </section>
+            <div className="my-7 flex items-center gap-6 text-sm text-[#777]">
+              <span className="h-px flex-1 bg-[#cfcfcf]" />
+              또는
+              <span className="h-px flex-1 bg-[#cfcfcf]" />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button className="h-12 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333]" type="button">
+                Google 계정으로 계속하기
+              </button>
+              <button className="h-12 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333]" type="button">
+                Apple 계속
+              </button>
+            </div>
+
+            <p className="mt-9 text-center text-sm text-[#777]">
+              {isSignup ? "이미 계정이 있으신가요?" : "아직 계정이 없으신가요?"}{" "}
+              <Link className="font-bold text-[#405cff]" href={isSignup ? "/login" : "/signup"}>
+                {isSignup ? "로그인" : "회원가입"}
+              </Link>
+            </p>
+          </div>
+        </section>
+
+        <section className="relative hidden items-center justify-center px-10 lg:flex">
+          <div className="max-w-[560px]">
+            <p className="text-[96px] font-black leading-[0.98] tracking-normal xl:text-[112px]">
+              Your
+              <br />
+              <span className="bg-[#d9f8b5] px-3">second</span>
+              <br />
+              brain
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
