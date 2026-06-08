@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { CalendarDays, Clock3, Cloud, FilePlus2, Pin, RotateCcw, Search, Sparkles, Star, StickyNote, Trash2 } from "lucide-react";
+import { CalendarDays, Clock3, Cloud, FilePlus2, Pin, RotateCcw, Search, Star, StickyNote, Trash2 } from "lucide-react";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { NoteList } from "@/components/notes/NoteList";
 import { PwaActions } from "@/components/pwa/PwaActions";
@@ -229,14 +229,6 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
             />
           </div>
 
-          <div className="mt-5 space-y-3">
-            <p className="text-xs font-semibold text-[#6f6258]">추가 기능</p>
-            <div className="rounded-xl border border-[#e6e1d9] bg-white p-4 shadow-sm">
-              <Sparkles className="text-[#289fd7]" size={18} />
-              <h3 className="mt-2 text-sm font-bold">AI 편집</h3>
-              <p className="mt-2 text-xs leading-5 text-[#4f4f4f]">작성한 메모를 다듬는 기능은 다음 단계에서 제공됩니다.</p>
-            </div>
-          </div>
         </aside>
 
         <section className="min-h-[680px] overflow-hidden rounded-xl border border-[#e6e1d9] bg-white shadow-sm">
