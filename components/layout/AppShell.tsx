@@ -96,7 +96,14 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
         ) : null}
 
         <section className={`${notesApi.selectedNote ? "hidden md:grid" : "grid"} min-h-0 grid-rows-[64px_1fr] border-r border-line`}>
-          <Topbar search={search} isGuest={isGuest} onSearch={setSearch} onNewNote={createNote} onOpenMobileNav={() => setMobileNavOpen(true)} />
+          <Topbar
+            search={search}
+            isGuest={isGuest}
+            userEmail={user?.email}
+            onSearch={setSearch}
+            onNewNote={createNote}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+          />
           <NoteList notes={notesApi.notes} selectedNoteId={notesApi.selectedNoteId} loading={notesApi.loading} onSelect={notesApi.setSelectedNoteId} />
         </section>
 

@@ -1,18 +1,19 @@
 "use client";
 
-import { Home, LogIn, LogOut, Menu, Plus, Search, Settings } from "lucide-react";
+import { Home, LogIn, LogOut, Menu, Plus, Search, Settings, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 type TopbarProps = {
   search: string;
   isGuest: boolean;
+  userEmail?: string | null;
   onSearch: (value: string) => void;
   onNewNote: () => void;
   onOpenMobileNav: () => void;
 };
 
-export function Topbar({ search, isGuest, onSearch, onNewNote, onOpenMobileNav }: TopbarProps) {
+export function Topbar({ search, isGuest, userEmail, onSearch, onNewNote, onOpenMobileNav }: TopbarProps) {
   const router = useRouter();
 
   async function logout() {
@@ -39,7 +40,13 @@ export function Topbar({ search, isGuest, onSearch, onNewNote, onOpenMobileNav }
           placeholder="메모 검색"
         />
       </div>
-      {isGuest ? <span className="hidden rounded-xl bg-paper px-3 py-2 text-xs font-semibold text-muted sm:inline">비회원 모드</span> : null}
+      <span
+        className="hidden max-w-[220px] items-center gap-2 truncate rounded-xl bg-paper px-3 py-2 text-xs font-semibold text-muted sm:inline-flex"
+        title={isGuest ? "비회원 모드" : userEmail || "로그인됨"}
+      >
+        <UserRound size={15} />
+        <span className="truncate">{isGuest ? "비회원 모드" : userEmail || "로그인됨"}</span>
+      </span>
       <button className="inline-flex items-center gap-2 rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-ink" onClick={onNewNote} type="button">
         <Plus size={18} />
         <span className="hidden sm:inline">새 메모</span>
