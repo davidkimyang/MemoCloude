@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Apple, Cloud, Loader2 } from "lucide-react";
+import type { Provider } from "@supabase/supabase-js";
 import { hasSupabaseEnv, supabase } from "@/lib/supabase/client";
 
 type AuthFormProps = {
@@ -28,6 +29,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const isSignup = mode === "signup";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -45,9 +47,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     setLoading(true);
-    const result = isSignup
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password });
+    const result = isSignup ? await supabase.auth.signUp({ email, password }) : await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
     if (result.error) {
@@ -56,11 +56,33 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (isSignup) {
-      setMessage("가입이 완료되었습니다. 로그인하거나 이메일 확인이 필요한 경우 메일함을 확인해주세요.");
+      setMessage("가입이 완료되었습니다. 이메일 확인이 필요한 경우 메일함을 확인해주세요.");
       return;
     }
 
     router.push("/app");
+  }
+
+  async function signInWithProvider(provider: Provider) {
+    setMessage(null);
+
+    if (!hasSupabaseEnv) {
+      setMessage("Supabase 환경 변수를 먼저 설정해주세요.");
+      return;
+    }
+
+    setOauthLoading(provider);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/app`
+      }
+    });
+
+    if (error) {
+      setOauthLoading(null);
+      setMessage(error.message);
+    }
   }
 
   return (
@@ -75,7 +97,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#e6e1d9]">
           <h1 className="text-center text-4xl font-bold tracking-normal">{isSignup ? "MemoCloud에 오신 것을 환영합니다!" : "다시 오신 것을 환영합니다!"}</h1>
-          <p className="mt-4 text-center text-base text-[#4f4f4f]">{isSignup ? "가입하여 메모를 계정에 저장하세요." : "로그인하여 저장된 메모를 이어서 작성하세요."}</p>
+          <p className="mt-4 text-center text-base text-[#4f4f4f]">{isSignup ? "가입하고 메모를 계정에 저장하세요." : "로그인하여 저장된 메모를 이어서 작성하세요."}</p>
 
           <form className="mt-8 space-y-4" onSubmit={onSubmit}>
             <input
@@ -111,7 +133,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
             <button
               className="flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[#171717] font-bold text-white transition hover:bg-black disabled:bg-[#c9c9c9]"
-              disabled={loading}
+              disabled={loading || Boolean(oauthLoading)}
               type="submit"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : null}
@@ -126,13 +148,23 @@ export function AuthForm({ mode }: AuthFormProps) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <button className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333]" type="button">
-              <GoogleMark />
-              Google 계정으로 계속하기
+            <button
+              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333] transition hover:bg-[#fbfaf7] disabled:opacity-60"
+              disabled={loading || Boolean(oauthLoading)}
+              onClick={() => void signInWithProvider("google")}
+              type="button"
+            >
+              {oauthLoading === "google" ? <Loader2 className="animate-spin" size={18} /> : <GoogleMark />}
+              Google로 계속하기
             </button>
-            <button className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333]" type="button">
-              <Apple size={20} fill="currentColor" />
-              Apple 계속
+            <button
+              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333] transition hover:bg-[#fbfaf7] disabled:opacity-60"
+              disabled={loading || Boolean(oauthLoading)}
+              onClick={() => void signInWithProvider("apple")}
+              type="button"
+            >
+              {oauthLoading === "apple" ? <Loader2 className="animate-spin" size={18} /> : <Apple size={20} fill="currentColor" />}
+              Apple로 계속하기
             </button>
           </div>
 
@@ -147,4 +179,3 @@ export function AuthForm({ mode }: AuthFormProps) {
     </main>
   );
 }
-
