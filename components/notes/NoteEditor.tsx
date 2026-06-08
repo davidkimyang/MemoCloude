@@ -2,10 +2,16 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
 import { FolderOpen, Pin, RotateCcw, Save, Trash2 } from "lucide-react";
-import type { Folder, Note } from "@/lib/types";
 import { useDebounce } from "@/hooks/useDebounce";
+import type { Folder, Note } from "@/lib/types";
 
 type SaveState = "idle" | "saving" | "saved" | "failed";
+
+type DebouncedDraft = {
+  noteId: string | null;
+  title: string;
+  content: string;
+};
 
 type NoteEditorProps = {
   note: Note | null;
@@ -19,13 +25,14 @@ type NoteEditorProps = {
 };
 
 export function NoteEditor({ note, folders, trashMode, onBack, onUpdate, onDelete, onRestore, onPermanentDelete }: NoteEditorProps) {
+  const [draftNoteId, setDraftNoteId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const debouncedTitle = useDebounce(title, 500);
-  const debouncedContent = useDebounce(content, 500);
+  const debouncedDraft = useDebounce<DebouncedDraft>({ noteId: draftNoteId, title, content }, 500);
 
   useEffect(() => {
+    setDraftNoteId(note?.id || null);
     setTitle(note?.title || "");
     setContent(note?.content || "");
     setSaveState("idle");
@@ -33,18 +40,19 @@ export function NoteEditor({ note, folders, trashMode, onBack, onUpdate, onDelet
 
   useEffect(() => {
     if (!note || trashMode) return;
-    if (debouncedTitle === note.title && debouncedContent === (note.content || "")) return;
+    if (debouncedDraft.noteId !== note.id) return;
+    if (debouncedDraft.title === note.title && debouncedDraft.content === (note.content || "")) return;
 
     let cancelled = false;
     setSaveState("saving");
-    void onUpdate(note.id, { title: debouncedTitle || "새 메모", content: debouncedContent }).then((result) => {
+    void onUpdate(note.id, { title: debouncedDraft.title || "새 메모", content: debouncedDraft.content }).then((result) => {
       if (!cancelled) setSaveState(result ? "failed" : "saved");
     });
 
     return () => {
       cancelled = true;
     };
-  }, [debouncedContent, debouncedTitle, note, onUpdate, trashMode]);
+  }, [debouncedDraft, note, onUpdate, trashMode]);
 
   if (!note) {
     return (
@@ -138,3 +146,4 @@ export function NoteEditor({ note, folders, trashMode, onBack, onUpdate, onDelet
     </section>
   );
 }
+
