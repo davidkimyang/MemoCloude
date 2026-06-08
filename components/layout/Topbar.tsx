@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, LogIn, LogOut, Menu, Plus, Search, Settings, UserRound } from "lucide-react";
+import { LogIn, LogOut, Menu, PlusCircle, Search, Settings, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
@@ -47,12 +47,14 @@ export function Topbar({ search, isGuest, userEmail, onSearch, onNewNote, onOpen
         <UserRound size={15} />
         <span className="truncate">{isGuest ? "비회원 모드" : userEmail || "로그인됨"}</span>
       </span>
-      <button className="inline-flex items-center gap-2 rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-ink" onClick={onNewNote} type="button">
-        <Plus size={18} />
-        <span className="hidden sm:inline">새 메모</span>
-      </button>
-      <button className="rounded-xl border border-line p-2" onClick={() => router.push("/")} title="홈으로 이동" type="button">
-        <Home size={18} />
+      <button
+        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+        onClick={onNewNote}
+        title="새 메모 작성"
+        type="button"
+      >
+        <PlusCircle size={19} />
+        <span>새 메모</span>
       </button>
       <button className="rounded-xl border border-line p-2" onClick={() => router.push("/settings")} title="설정" type="button">
         <Settings size={18} />

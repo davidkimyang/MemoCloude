@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, Edit3, Folder, FolderPlus, Pin, Trash2 } from "lucide-react";
 import type { Folder as FolderType, FolderFilter } from "@/lib/types";
 
@@ -11,10 +12,10 @@ type SidebarProps = {
   onCreateFolder: (name: string) => Promise<void>;
   onRenameFolder: (id: string, name: string) => Promise<void>;
   onDeleteFolder: (id: string) => Promise<void>;
-  trashHref?: boolean;
 };
 
 export function Sidebar({ folders, selectedFilter, onSelect, onCreateFolder, onRenameFolder, onDeleteFolder }: SidebarProps) {
+  const router = useRouter();
   const [folderName, setFolderName] = useState("");
 
   async function submitFolder(event: FormEvent<HTMLFormElement>) {
@@ -33,7 +34,9 @@ export function Sidebar({ folders, selectedFilter, onSelect, onCreateFolder, onR
   return (
     <aside className="flex h-full flex-col border-r border-line bg-paper/80 p-4">
       <div className="mb-5">
-        <h1 className="text-2xl font-semibold tracking-normal">MemoCloud</h1>
+        <button className="text-left" onClick={() => router.push("/")} title="홈으로 이동" type="button">
+          <h1 className="text-2xl font-semibold tracking-normal transition hover:text-accent">MemoCloud</h1>
+        </button>
         <p className="mt-1 text-sm text-muted">개인 메모 워크스페이스</p>
       </div>
 
