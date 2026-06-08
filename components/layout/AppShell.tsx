@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { Cloud, FilePlus2, LogIn, LogOut, Sparkles } from "lucide-react";
+import { Cloud, FilePlus2, Sparkles } from "lucide-react";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { NoteList } from "@/components/notes/NoteList";
+import { PwaActions } from "@/components/pwa/PwaActions";
 import { hasSupabaseEnv, supabase } from "@/lib/supabase/client";
 import { useFolders } from "@/hooks/useFolders";
 import { useNotes } from "@/hooks/useNotes";
@@ -59,18 +60,19 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
 
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#171717]">
-      <header className="flex h-20 items-center justify-between px-8 lg:px-20">
+      <header className="flex min-h-20 flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-20">
         <Link className="flex items-center gap-3" href="/">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#00a82d] text-white">
             <Cloud size={24} />
           </span>
           <span className="text-3xl font-bold tracking-normal">MemoCloud</span>
         </Link>
-        <nav className="flex items-center gap-8 text-base font-medium">
+        <nav className="flex flex-wrap items-center justify-end gap-3 text-base font-medium">
+          <PwaActions compact />
           <span className="hidden max-w-[240px] truncate text-[#6f6258] sm:inline" title={isGuest ? "비회원 모드" : user?.email || ""}>
             {isGuest ? "비회원 모드" : user?.email}
           </span>
-          <button className="hover:text-[#00a82d]" onClick={logout} type="button">
+          <button className="rounded-lg px-2 py-2 hover:text-[#00a82d]" onClick={logout} type="button">
             {isGuest ? "로그인" : "로그아웃"}
           </button>
         </nav>
@@ -83,7 +85,8 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
             <span className="text-sm text-[#6f6258]">{notesApi.notes.length} 메모</span>
           </div>
           <button className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#00a82d] font-bold text-white transition hover:bg-[#008f26]" onClick={createNote} type="button">
-            <FilePlus2 size={18} />새 메모 만들기
+            <FilePlus2 size={18} />
+            새 메모 만들기
           </button>
 
           <div className="mt-8 min-h-0 flex-1 overflow-hidden">
@@ -116,4 +119,3 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
     </main>
   );
 }
-
