@@ -11,8 +11,6 @@ type AuthFormProps = {
   mode: "login" | "signup";
 };
 
-type OAuthProvider = Provider | "naver";
-
 function GoogleMark() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
@@ -24,10 +22,10 @@ function GoogleMark() {
   );
 }
 
-function NaverMark() {
+function KakaoMark() {
   return (
-    <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-sm bg-[#03c75a] text-[13px] font-black leading-none text-white">
-      N
+    <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-[#191919] text-[11px] font-black leading-none text-[#fee500]">
+      K
     </span>
   );
 }
@@ -39,7 +37,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const isSignup = mode === "signup";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -73,7 +71,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     router.push("/app");
   }
 
-  async function signInWithProvider(provider: OAuthProvider) {
+  async function signInWithProvider(provider: Provider) {
     setMessage(null);
 
     if (!hasSupabaseEnv) {
@@ -83,7 +81,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     setOauthLoading(provider);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: provider as Provider,
+      provider,
       options: {
         redirectTo: `${window.location.origin}/app`
       }
@@ -168,13 +166,13 @@ export function AuthForm({ mode }: AuthFormProps) {
               Google로 계속하기
             </button>
             <button
-              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#03c75a] bg-[#03c75a] font-semibold text-white transition hover:bg-[#02b351] disabled:opacity-60"
+              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#fee500] bg-[#fee500] font-semibold text-[#191919] transition hover:bg-[#f4dc00] disabled:opacity-60"
               disabled={loading || Boolean(oauthLoading)}
-              onClick={() => void signInWithProvider("naver")}
+              onClick={() => void signInWithProvider("kakao")}
               type="button"
             >
-              {oauthLoading === "naver" ? <Loader2 className="animate-spin" size={18} /> : <NaverMark />}
-              Naver로 계속하기
+              {oauthLoading === "kakao" ? <Loader2 className="animate-spin" size={18} /> : <KakaoMark />}
+              Kakao로 계속하기
             </button>
           </div>
 
