@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlignLeft, Bold, CheckCircle2, Italic, Link2, List, Mic, MoreHorizontal, Pin, Save, Trash2, Underline } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlignLeft, Bold, CheckCircle2, Italic, Link2, List, Pin, Save, Trash2, Underline } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { Folder, Note } from "@/lib/types";
 
@@ -25,6 +25,7 @@ type NoteEditorProps = {
 };
 
 export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRestore, onPermanentDelete }: NoteEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [draftNoteId, setDraftNoteId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -59,6 +60,35 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
     if (saveState === "saved") return "저장됨";
     if (saveState === "failed") return "저장 실패";
     return "대기 중";
+  }
+
+  function replaceSelection(format: (selected: string) => string) {
+    if (trashMode) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = content.slice(start, end);
+    const replacement = format(selected);
+    const nextContent = `${content.slice(0, start)}${replacement}${content.slice(end)}`;
+    setContent(nextContent);
+
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + replacement.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
+  }
+
+  function insertLine(prefix: string) {
+    replaceSelection((selected) => {
+      const text = selected || "목록 항목";
+      return text
+        .split("\n")
+        .map((line) => `${prefix}${line || "목록 항목"}`)
+        .join("\n");
+    });
   }
 
   if (!note) {
@@ -111,18 +141,30 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
         </div>
       </div>
 
-      <div className="flex h-12 items-center gap-4 border-b border-[#f1eee8] px-5 text-[#9b9b9b]">
-        <span className="text-sm">삽입</span>
-        <Mic size={17} />
-        <CheckCircle2 size={17} />
-        <span className="h-5 w-px bg-[#dedbd5]" />
-        <Bold size={17} />
-        <Italic size={17} />
-        <Underline size={17} />
-        <List size={17} />
-        <Link2 size={17} />
-        <AlignLeft size={17} />
-        <MoreHorizontal size={17} />
+      <div className="flex h-12 items-center gap-2 border-b border-[#f1eee8] px-5 text-[#777]">
+        <span className="mr-2 text-sm text-[#9b9b9b]">삽입</span>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => insertLine("- [ ] ")} title="체크 항목 삽입" type="button">
+          <CheckCircle2 size={17} />
+        </button>
+        <span className="mx-1 h-5 w-px bg-[#dedbd5]" />
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `**${selected || "굵은 글씨"}**`)} title="굵게" type="button">
+          <Bold size={17} />
+        </button>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `*${selected || "기울임 글씨"}*`)} title="기울임" type="button">
+          <Italic size={17} />
+        </button>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `<u>${selected || "밑줄 글씨"}</u>`)} title="밑줄" type="button">
+          <Underline size={17} />
+        </button>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => insertLine("- ")} title="목록 삽입" type="button">
+          <List size={17} />
+        </button>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `[${selected || "링크 텍스트"}](https://)`)} title="링크 삽입" type="button">
+          <Link2 size={17} />
+        </button>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `> ${selected || "인용문"}`)} title="인용 삽입" type="button">
+          <AlignLeft size={17} />
+        </button>
       </div>
 
       <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col overflow-hidden px-8 py-20">
@@ -134,6 +176,7 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
           placeholder="제목"
         />
         <textarea
+          ref={textareaRef}
           className="mt-8 flex-1 resize-none bg-transparent text-lg leading-8 outline-none placeholder:text-[#d8d8d8]"
           disabled={trashMode}
           value={content}
