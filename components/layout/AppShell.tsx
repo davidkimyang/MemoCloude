@@ -66,6 +66,8 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
           <Sidebar
             folders={folders}
             selectedFilter={selectedFilter}
+            isGuest={isGuest}
+            userEmail={user?.email}
             onSelect={selectFilter}
             onCreateFolder={createFolder}
             onRenameFolder={renameFolder}
@@ -85,6 +87,8 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
                 <Sidebar
                   folders={folders}
                   selectedFilter={selectedFilter}
+                  isGuest={isGuest}
+                  userEmail={user?.email}
                   onSelect={selectFilter}
                   onCreateFolder={createFolder}
                   onRenameFolder={renameFolder}
@@ -98,8 +102,6 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
         <section className={`${notesApi.selectedNote ? "hidden md:grid" : "grid"} min-h-0 grid-rows-[64px_1fr] border-r border-line`}>
           <Topbar
             search={search}
-            isGuest={isGuest}
-            userEmail={user?.email}
             onSearch={setSearch}
             onNewNote={createNote}
             onOpenMobileNav={() => setMobileNavOpen(true)}
@@ -128,4 +130,3 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
     </main>
   );
 }
-

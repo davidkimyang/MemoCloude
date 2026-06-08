@@ -2,19 +2,22 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Edit3, Folder, FolderPlus, Pin, Trash2 } from "lucide-react";
+import { Clock, Edit3, Folder, FolderPlus, LogIn, LogOut, Pin, Settings, Trash2, UserRound } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 import type { Folder as FolderType, FolderFilter } from "@/lib/types";
 
 type SidebarProps = {
   folders: FolderType[];
   selectedFilter: FolderFilter;
+  isGuest: boolean;
+  userEmail?: string | null;
   onSelect: (filter: FolderFilter) => void;
   onCreateFolder: (name: string) => Promise<void>;
   onRenameFolder: (id: string, name: string) => Promise<void>;
   onDeleteFolder: (id: string) => Promise<void>;
 };
 
-export function Sidebar({ folders, selectedFilter, onSelect, onCreateFolder, onRenameFolder, onDeleteFolder }: SidebarProps) {
+export function Sidebar({ folders, selectedFilter, isGuest, userEmail, onSelect, onCreateFolder, onRenameFolder, onDeleteFolder }: SidebarProps) {
   const router = useRouter();
   const [folderName, setFolderName] = useState("");
 
@@ -22,6 +25,16 @@ export function Sidebar({ folders, selectedFilter, onSelect, onCreateFolder, onR
     event.preventDefault();
     await onCreateFolder(folderName);
     setFolderName("");
+  }
+
+  async function logout() {
+    if (isGuest) {
+      router.push("/login");
+      return;
+    }
+
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
   const baseItems = [
@@ -116,6 +129,30 @@ export function Sidebar({ folders, selectedFilter, onSelect, onCreateFolder, onR
           <p className="rounded-2xl bg-white/60 px-3 py-4 text-sm text-muted">폴더가 없습니다. 새 폴더를 만들어보세요.</p>
         )}
       </div>
+
+      <section className="mt-4 rounded-2xl border border-line bg-white p-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-paper text-muted">
+            <UserRound size={18} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-muted">{isGuest ? "비회원 모드" : "로그인됨"}</p>
+            <p className="truncate text-sm font-medium" title={isGuest ? "로그인하면 메모를 계정에 저장할 수 있습니다." : userEmail || ""}>
+              {isGuest ? "로컬 저장 중" : userEmail || "이메일 없음"}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-3 py-2 text-sm" onClick={() => router.push("/settings")} type="button">
+            <Settings size={16} />
+            설정
+          </button>
+          <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-white" onClick={logout} type="button">
+            {isGuest ? <LogIn size={16} /> : <LogOut size={16} />}
+            {isGuest ? "로그인" : "로그아웃"}
+          </button>
+        </div>
+      </section>
     </aside>
   );
 }
