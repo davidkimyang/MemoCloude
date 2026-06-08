@@ -5,13 +5,30 @@ import type { User } from "@supabase/supabase-js";
 import { createGuestNote, readGuestNotes, writeGuestNotes } from "@/lib/guestStorage";
 import { supabase } from "@/lib/supabase/client";
 import type { FolderFilter, Note } from "@/lib/types";
+import { plainText } from "@/lib/utils";
 
-const baseFilters = ["all", "pinned", "recent", "trash"];
+const baseFilters = ["all", "pinned", "recent", "today", "important", "trash"];
+
+function startOfTodayIso() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date.toISOString();
+}
+
+function recentCutoffIso() {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toISOString();
+}
 
 function filterGuestNotes(notes: Note[], selectedFilter: FolderFilter) {
+  const today = startOfTodayIso();
+  const recent = recentCutoffIso();
   const visibleNotes = notes.filter((note) => (selectedFilter === "trash" ? note.is_deleted : !note.is_deleted));
   const filteredNotes = visibleNotes.filter((note) => {
     if (selectedFilter === "pinned") return note.is_pinned;
+    if (selectedFilter === "today") return note.updated_at >= today;
+    if (selectedFilter === "recent") return note.updated_at >= recent;
     if (baseFilters.includes(selectedFilter)) return true;
     return note.folder_id === selectedFilter;
   });
@@ -44,6 +61,8 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
     } else {
       query = query.eq("is_deleted", false);
       if (selectedFilter === "pinned") query = query.eq("is_pinned", true);
+      if (selectedFilter === "today") query = query.gte("updated_at", startOfTodayIso());
+      if (selectedFilter === "recent") query = query.gte("updated_at", recentCutoffIso());
       if (!baseFilters.includes(selectedFilter)) query = query.eq("folder_id", selectedFilter);
     }
 
@@ -60,7 +79,7 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
   const filteredNotes = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return notes;
-    return notes.filter((note) => `${note.title} ${note.content || ""}`.toLowerCase().includes(term));
+    return notes.filter((note) => `${note.title} ${plainText(note.content)}`.toLowerCase().includes(term));
   }, [notes, search]);
 
   useEffect(() => {
@@ -73,9 +92,9 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
     }
   }, [filteredNotes, selectedNoteId]);
 
-  async function createNote(folderId: string | null) {
+  async function createNote(folderId: string | null, initial?: Partial<Pick<Note, "title" | "content">>) {
     if (!user) {
-      const note = createGuestNote(folderId);
+      const note = { ...createGuestNote(folderId), ...initial };
       const nextNotes = [note, ...readGuestNotes()];
       writeGuestNotes(nextNotes);
       setNotes(filterGuestNotes(nextNotes, selectedFilter));
@@ -88,8 +107,8 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
       .insert({
         user_id: user.id,
         folder_id: folderId,
-        title: "새 메모",
-        content: ""
+        title: initial?.title || "새 메모",
+        content: initial?.content || ""
       })
       .select("*")
       .single();
@@ -120,12 +139,14 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
   }
 
   async function moveToTrash(id: string) {
+    const target = notes.find((note) => note.id === id) || null;
+
     if (!user) {
       const now = new Date().toISOString();
       const nextNotes = readGuestNotes().map((note) => (note.id === id ? { ...note, is_deleted: true, deleted_at: now, updated_at: now } : note));
       writeGuestNotes(nextNotes);
       setNotes(filterGuestNotes(nextNotes, selectedFilter));
-      return;
+      return target;
     }
 
     const { error: updateError } = await supabase
@@ -134,6 +155,7 @@ export function useNotes(user: User | null, selectedFilter: FolderFilter, search
       .eq("id", id);
     if (updateError) setError(updateError.message);
     await loadNotes();
+    return target;
   }
 
   async function restoreNote(id: string) {

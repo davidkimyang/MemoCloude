@@ -16,13 +16,35 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export function previewText(content: string | null | undefined) {
-  const text = content
-    ?.replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = plainText(content);
 
   return text ? text.slice(0, 90) : "내용 없음";
+}
+
+export function plainText(content: string | null | undefined) {
+  return (
+    content
+      ?.replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(div|p|li|blockquote|h[1-6])>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ")
+      .trim() || ""
+  );
+}
+
+export function titleFromContent(content: string | null | undefined) {
+  const firstLine =
+    content
+      ?.replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(div|p|li|blockquote|h[1-6])>/gi, "\n")
+      .split("\n")
+      .map((line) => plainText(line))
+      .find(Boolean) || "";
+  return firstLine ? firstLine.slice(0, 36) : "새 메모";
 }

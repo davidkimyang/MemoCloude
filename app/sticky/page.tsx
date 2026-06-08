@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Cloud, Copy, Eraser, Save, WifiOff } from "lucide-react";
+import { Cloud, Copy, Eraser, FilePlus2, Save, WifiOff } from "lucide-react";
+import { createGuestNote, readGuestNotes, writeGuestNotes } from "@/lib/guestStorage";
+import { hasSupabaseEnv, supabase } from "@/lib/supabase/client";
+import { titleFromContent } from "@/lib/utils";
 
 const STICKY_KEY = "memocloud:sticky:note";
 const STICKY_UPDATED_KEY = "memocloud:sticky:updated";
@@ -17,10 +20,22 @@ function formatUpdated(value: string | null) {
   }).format(new Date(value));
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function toHtml(content: string) {
+  return content
+    .split("\n")
+    .map((line) => `<div>${escapeHtml(line)}</div>`)
+    .join("");
+}
+
 export default function StickyPage() {
   const [content, setContent] = useState("");
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [message, setMessage] = useState("인터넷이 끊겨도 이 화면에서 작성한 내용은 이 기기에 저장됩니다.");
 
   useEffect(() => {
     setContent(window.localStorage.getItem(STICKY_KEY) || "");
@@ -39,13 +54,49 @@ export default function StickyPage() {
   async function copyText() {
     await navigator.clipboard.writeText(content);
     setCopied(true);
+    setMessage("복사했습니다.");
     window.setTimeout(() => setCopied(false), 1300);
   }
 
   function clearSticky() {
     if (!content || window.confirm("포스트잇 내용을 비울까요?")) {
       setContent("");
+      setMessage("포스트잇을 비웠습니다.");
     }
+  }
+
+  async function saveAsNote() {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      setMessage("저장할 내용이 없습니다.");
+      return;
+    }
+
+    const html = toHtml(trimmed);
+    const title = titleFromContent(html);
+
+    if (hasSupabaseEnv) {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        const { error } = await supabase.from("notes").insert({
+          user_id: data.user.id,
+          title,
+          content: html
+        });
+
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        setMessage("정식 메모로 저장했습니다.");
+        return;
+      }
+    }
+
+    const note = { ...createGuestNote(null), title, content: html };
+    writeGuestNotes([note, ...readGuestNotes()]);
+    setMessage("비회원 메모로 저장했습니다.");
   }
 
   return (
@@ -58,6 +109,9 @@ export default function StickyPage() {
           MemoCloud
         </Link>
         <div className="flex items-center gap-2">
+          <button className="rounded-lg border border-[#d7c75f] bg-white/60 p-2 hover:bg-white" onClick={saveAsNote} title="정식 메모로 저장" type="button">
+            <FilePlus2 size={17} />
+          </button>
           <button className="rounded-lg border border-[#d7c75f] bg-white/60 p-2 hover:bg-white" onClick={copyText} title="복사" type="button">
             <Copy size={17} />
           </button>
@@ -89,7 +143,7 @@ export default function StickyPage() {
           autoFocus
         />
 
-        <p className="mt-3 text-center text-xs font-semibold text-[#6a5b14]">{copied ? "복사했습니다." : "인터넷이 끊겨도 이 화면에서 작성한 내용은 이 기기에 저장됩니다."}</p>
+        <p className="mt-3 text-center text-xs font-semibold text-[#6a5b14]">{copied ? "복사했습니다." : message}</p>
       </section>
     </main>
   );

@@ -1,9 +1,10 @@
 "use client";
 
 import { type MouseEvent, useEffect, useRef, useState } from "react";
-import { AlignLeft, Bold, CheckCircle2, Italic, Link2, List, Pin, Save, Trash2, Underline } from "lucide-react";
+import { AlignLeft, Bold, CheckCircle2, Italic, Link2, List, Pin, Save, Star, Trash2, Underline } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { Folder, Note } from "@/lib/types";
+import { titleFromContent } from "@/lib/utils";
 
 type SaveState = "idle" | "saving" | "saved" | "failed";
 
@@ -17,7 +18,9 @@ type NoteEditorProps = {
   note: Note | null;
   folders: Folder[];
   trashMode?: boolean;
+  important?: boolean;
   onBack?: () => void;
+  onToggleImportant?: (id: string) => void;
   onUpdate: (id: string, values: Partial<Pick<Note, "title" | "content" | "folder_id" | "is_pinned">>) => Promise<unknown>;
   onDelete: (id: string) => Promise<void>;
   onRestore?: (id: string) => Promise<void>;
@@ -26,6 +29,10 @@ type NoteEditorProps = {
 
 function normalizeHtml(value: string | null | undefined) {
   return (value || "").replace(/\sdata-placeholder="[^"]*"/g, "").trim();
+}
+
+function shouldAutoTitle(title: string) {
+  return !title.trim() || title.trim() === "새 메모";
 }
 
 function sanitizeEditorHtml(html: string) {
@@ -41,7 +48,7 @@ function sanitizeEditorHtml(html: string) {
       const value = attribute.value.trim().toLowerCase();
       const allowedHref = element.tagName.toLowerCase() === "a" && name === "href" && !value.startsWith("javascript:");
 
-      if (name.startsWith("on") || (!["href", "target", "rel"].includes(name) && !name.startsWith("data-")) || (name === "href" && !allowedHref)) {
+      if (name.startsWith("on") || (!["href", "target", "rel", "class"].includes(name) && !name.startsWith("data-")) || (name === "href" && !allowedHref)) {
         element.removeAttribute(attribute.name);
       }
     });
@@ -55,7 +62,17 @@ function sanitizeEditorHtml(html: string) {
   return template.innerHTML.trim();
 }
 
-export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRestore, onPermanentDelete }: NoteEditorProps) {
+export function NoteEditor({
+  note,
+  trashMode,
+  important = false,
+  onBack,
+  onUpdate,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
+  onToggleImportant
+}: NoteEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [draftNoteId, setDraftNoteId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -80,20 +97,22 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
     if (!note || trashMode) return;
     if (debouncedDraft.noteId !== note.id) return;
 
-    const nextTitle = debouncedDraft.title.trim() || "새 메모";
     const nextContent = normalizeHtml(debouncedDraft.content);
+    const nextTitle = shouldAutoTitle(debouncedDraft.title) ? titleFromContent(nextContent) : debouncedDraft.title.trim();
     if (nextTitle === note.title && nextContent === normalizeHtml(note.content)) return;
 
     let cancelled = false;
     setSaveState("saving");
     void onUpdate(note.id, { title: nextTitle, content: nextContent }).then((result) => {
-      if (!cancelled) setSaveState(result ? "failed" : "saved");
+      if (cancelled) return;
+      setSaveState(result ? "failed" : "saved");
+      if (!result && shouldAutoTitle(title) && nextTitle !== title) setTitle(nextTitle);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [debouncedDraft, note, onUpdate, trashMode]);
+  }, [debouncedDraft, note, onUpdate, title, trashMode]);
 
   function saveLabel() {
     if (saveState === "saving") return "저장 중";
@@ -163,6 +182,9 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
         <div className="ml-auto flex items-center gap-2">
           {!trashMode ? (
             <>
+              <button className="rounded-lg border border-[#e6e1d9] p-2 hover:bg-[#fbfaf7]" onClick={() => onToggleImportant?.(note.id)} title="중요" type="button">
+                <Star size={17} className={important ? "fill-[#f4b400] text-[#f4b400]" : ""} />
+              </button>
               <button className="rounded-lg border border-[#e6e1d9] p-2 hover:bg-[#fbfaf7]" onClick={() => void onUpdate(note.id, { is_pinned: !note.is_pinned })} title="고정" type="button">
                 <Pin size={17} className={note.is_pinned ? "fill-[#00a82d] text-[#00a82d]" : ""} />
               </button>
