@@ -16,7 +16,12 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export function previewText(content: string | null | undefined) {
-  const text = content?.trim();
+  const text = content
+    ?.replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return text ? text.slice(0, 90) : "내용 없음";
 }
-

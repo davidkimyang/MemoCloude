@@ -25,7 +25,7 @@ type NoteEditorProps = {
 };
 
 export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRestore, onPermanentDelete }: NoteEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
   const [draftNoteId, setDraftNoteId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -37,6 +37,7 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
     setTitle(note?.title || "");
     setContent(note?.content || "");
     setSaveState("idle");
+    if (editorRef.current) editorRef.current.innerHTML = note?.content || "";
   }, [note?.id, note?.title, note?.content]);
 
   useEffect(() => {
@@ -62,33 +63,31 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
     return "대기 중";
   }
 
-  function replaceSelection(format: (selected: string) => string) {
-    if (trashMode) return;
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = content.slice(start, end);
-    const replacement = format(selected);
-    const nextContent = `${content.slice(0, start)}${replacement}${content.slice(end)}`;
-    setContent(nextContent);
-
-    window.requestAnimationFrame(() => {
-      textarea.focus();
-      const cursor = start + replacement.length;
-      textarea.setSelectionRange(cursor, cursor);
-    });
+  function syncEditorContent() {
+    setContent(editorRef.current?.innerHTML || "");
   }
 
-  function insertLine(prefix: string) {
-    replaceSelection((selected) => {
-      const text = selected || "목록 항목";
-      return text
-        .split("\n")
-        .map((line) => `${prefix}${line || "목록 항목"}`)
-        .join("\n");
-    });
+  function runCommand(command: string, value?: string) {
+    if (trashMode) return;
+    editorRef.current?.focus();
+    document.execCommand(command, false, value);
+    syncEditorContent();
+  }
+
+  function insertChecklist() {
+    if (trashMode) return;
+    editorRef.current?.focus();
+    document.execCommand("insertHTML", false, '<div class="check-line">☐ 체크 항목</div>');
+    syncEditorContent();
+  }
+
+  function createLink() {
+    if (trashMode) return;
+    const url = window.prompt("링크 URL을 입력하세요", "https://");
+    if (!url) return;
+    editorRef.current?.focus();
+    document.execCommand("createLink", false, url);
+    syncEditorContent();
   }
 
   if (!note) {
@@ -142,27 +141,27 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
       </div>
 
       <div className="flex h-12 items-center gap-2 border-b border-[#f1eee8] px-5 text-[#777]">
-        <span className="mr-2 text-sm text-[#9b9b9b]">삽입</span>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => insertLine("- [ ] ")} title="체크 항목 삽입" type="button">
+        <span className="mr-2 text-sm text-[#9b9b9b]">편집</span>
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={insertChecklist} title="체크 항목 삽입" type="button">
           <CheckCircle2 size={17} />
         </button>
         <span className="mx-1 h-5 w-px bg-[#dedbd5]" />
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `**${selected || "굵은 글씨"}**`)} title="굵게" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("bold")} title="굵게" type="button">
           <Bold size={17} />
         </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `*${selected || "기울임 글씨"}*`)} title="기울임" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("italic")} title="기울임" type="button">
           <Italic size={17} />
         </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `<u>${selected || "밑줄 글씨"}</u>`)} title="밑줄" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("underline")} title="밑줄" type="button">
           <Underline size={17} />
         </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => insertLine("- ")} title="목록 삽입" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("insertUnorderedList")} title="목록 삽입" type="button">
           <List size={17} />
         </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `[${selected || "링크 텍스트"}](https://)`)} title="링크 삽입" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={createLink} title="링크 삽입" type="button">
           <Link2 size={17} />
         </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => replaceSelection((selected) => `> ${selected || "인용문"}`)} title="인용 삽입" type="button">
+        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onMouseDown={(event) => event.preventDefault()} onClick={() => runCommand("formatBlock", "blockquote")} title="인용 삽입" type="button">
           <AlignLeft size={17} />
         </button>
       </div>
@@ -175,13 +174,13 @@ export function NoteEditor({ note, trashMode, onBack, onUpdate, onDelete, onRest
           onChange={(event) => setTitle(event.target.value)}
           placeholder="제목"
         />
-        <textarea
-          ref={textareaRef}
-          className="mt-8 flex-1 resize-none bg-transparent text-lg leading-8 outline-none placeholder:text-[#d8d8d8]"
-          disabled={trashMode}
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          placeholder="본문 입력"
+        <div
+          ref={editorRef}
+          className="rich-editor mt-8 flex-1 overflow-y-auto text-lg leading-8 outline-none empty:before:text-[#d8d8d8] empty:before:content-[attr(data-placeholder)]"
+          contentEditable={!trashMode}
+          data-placeholder="본문 입력"
+          onInput={syncEditorContent}
+          suppressContentEditableWarning
         />
       </div>
     </section>

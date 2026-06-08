@@ -29,3 +29,38 @@ select {
   color: #1d1d1f;
 }
 
+.rich-editor b,
+.rich-editor strong {
+  font-weight: 800;
+}
+
+.rich-editor i,
+.rich-editor em {
+  font-style: italic;
+}
+
+.rich-editor u {
+  text-decoration: underline;
+}
+
+.rich-editor ul {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+
+.rich-editor blockquote {
+  margin: 0.75rem 0;
+  border-left: 4px solid #00a82d;
+  padding-left: 1rem;
+  color: #4f4f4f;
+}
+
+.rich-editor a {
+  color: #405cff;
+  text-decoration: underline;
+}
+
+.rich-editor .check-line {
+  margin: 0.35rem 0;
+}
