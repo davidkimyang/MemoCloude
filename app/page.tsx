@@ -58,11 +58,6 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-
-          <div className="absolute bottom-6 right-6 max-w-md rounded-2xl bg-[#fff1c7] p-6 shadow-sm">
-            <h3 className="font-bold">당신의 메모장이 준비되어 있습니다</h3>
-            <p className="mt-2 text-sm leading-6 text-[#594d38]">비회원은 브라우저에 저장하고, 로그인하면 Supabase 계정에 저장합니다.</p>
-          </div>
         </section>
       </section>
     </main>
