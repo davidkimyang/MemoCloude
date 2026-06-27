@@ -130,7 +130,7 @@ export function NoteEditor({
     return (
       <section className="flex h-full items-center justify-center bg-white px-6 text-center">
         <div>
-          <h2 className="text-3xl font-black tracking-normal">온라인 메모장을 시작하세요</h2>
+          <h2 className="text-2xl font-black tracking-normal sm:text-3xl">온라인 메모장을 시작하세요</h2>
           <p className="mt-4 max-w-xl leading-7 text-[#4f4f4f]">왼쪽에서 새 메모 만들기를 눌러 바로 작성해보세요.</p>
         </div>
       </section>
@@ -139,7 +139,7 @@ export function NoteEditor({
 
   return (
     <section className="flex h-full flex-col bg-white">
-      <div className="flex h-12 items-center gap-6 border-b border-[#eee9e2] px-5 text-sm text-[#6f6258]">
+      <div className="flex min-h-12 items-center gap-3 border-b border-[#eee9e2] px-3 py-2 text-sm text-[#6f6258] sm:gap-6 sm:px-5">
         {onBack ? (
           <button className="rounded-md border border-[#e6e1d9] px-3 py-1.5 md:hidden" onClick={onBack} type="button">
             목록
@@ -149,7 +149,7 @@ export function NoteEditor({
           <Save size={16} />
           {saveLabel()}
         </span>
-        <span className="inline-flex items-center gap-2">
+        <span className="hidden items-center gap-2 sm:inline-flex">
           <span className="h-5 w-9 rounded-full bg-[#d6d6d6]" />
           자동 저장
         </span>
@@ -179,9 +179,9 @@ export function NoteEditor({
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col overflow-hidden px-8 py-20">
+      <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col overflow-hidden px-5 py-10 sm:px-8 sm:py-16 lg:py-20">
         <input
-          className="w-full bg-transparent text-4xl font-black tracking-normal outline-none placeholder:text-[#d8d8d8]"
+          className="w-full bg-transparent text-3xl font-black tracking-normal outline-none placeholder:text-[#d8d8d8] sm:text-4xl"
           disabled={trashMode}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -189,7 +189,7 @@ export function NoteEditor({
         />
         <div
           ref={editorRef}
-          className="rich-editor mt-8 flex-1 overflow-y-auto text-lg leading-8 outline-none empty:before:text-[#d8d8d8] empty:before:content-[attr(data-placeholder)]"
+          className="rich-editor mt-6 flex-1 overflow-y-auto text-base leading-8 outline-none empty:before:text-[#d8d8d8] empty:before:content-[attr(data-placeholder)] sm:mt-8 sm:text-lg"
           contentEditable={!trashMode}
           data-placeholder="본문 입력"
           onInput={syncEditorContent}

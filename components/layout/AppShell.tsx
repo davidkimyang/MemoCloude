@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { KeyboardEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { CalendarDays, Clock3, Cloud, FilePlus2, Pin, RotateCcw, Search, Star, StickyNote, Trash2 } from "lucide-react";
+import { CalendarDays, Clock3, Cloud, FilePlus2, Pin, RotateCcw, Search, Settings, Star, StickyNote, Trash2 } from "lucide-react";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { NoteList } from "@/components/notes/NoteList";
 import { PwaActions } from "@/components/pwa/PwaActions";
@@ -38,6 +38,7 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [importantNoteIds, setImportantNoteIds] = useState<string[]>([]);
   const [deletedToast, setDeletedToast] = useState<DeletedToast | null>(null);
+  const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
   const { folders } = useFolders(user);
   const dataFilter = selectedFilter === "important" ? "all" : selectedFilter;
   const notesApi = useNotes(user, dataFilter, search);
@@ -91,6 +92,7 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
     if (note) {
       setSelectedFilter("all");
       notesApi.setSelectedNoteId(note.id);
+      setMobileEditorOpen(true);
     }
   }
 
@@ -123,6 +125,11 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
     if (event.key === "Enter") commitSearch();
   }
 
+  function selectNote(id: string) {
+    notesApi.setSelectedNoteId(id);
+    setMobileEditorOpen(true);
+  }
+
   async function logout() {
     if (isGuest) {
       window.location.href = "/login";
@@ -139,26 +146,31 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
 
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#171717]">
-      <header className="flex min-h-20 flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-20">
+      <header className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-[#eee9e2] bg-[#fbfaf7]/95 px-4 py-3 backdrop-blur lg:px-8">
         <Link className="flex items-center gap-3" href="/">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#00a82d] text-white">
-            <Cloud size={24} />
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#00a82d] text-white">
+            <Cloud size={22} />
           </span>
-          <span className="text-3xl font-bold tracking-normal">MemoCloud</span>
+          <span className="text-2xl font-bold tracking-normal">MemoCloud</span>
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-3 text-base font-medium">
-          <PwaActions compact />
+        <nav className="flex flex-wrap items-center justify-end gap-2 text-sm font-semibold">
+          <div className="hidden sm:block">
+            <PwaActions compact />
+          </div>
           <span className="hidden max-w-[240px] truncate text-[#6f6258] sm:inline" title={isGuest ? "비회원 모드" : user?.email || ""}>
             {isGuest ? "비회원 모드" : user?.email}
           </span>
+          <Link className="rounded-lg p-2 hover:bg-white" href="/settings" title="설정">
+            <Settings size={19} />
+          </Link>
           <button className="rounded-lg px-2 py-2 hover:text-[#00a82d]" onClick={logout} type="button">
             {isGuest ? "로그인" : "로그아웃"}
           </button>
         </nav>
       </header>
 
-      <section className="grid min-h-[calc(100vh-80px)] gap-2 px-2 pb-6 lg:grid-cols-[320px_1fr]">
-        <aside className="flex min-h-0 flex-col rounded-xl border border-[#e6e1d9] bg-white p-5 shadow-sm">
+      <section className="grid min-h-[calc(100vh-65px)] gap-2 px-2 pb-4 pt-2 md:grid-cols-[320px_1fr] lg:px-4">
+        <aside className={`${mobileEditorOpen ? "hidden md:flex" : "flex"} min-h-[calc(100vh-88px)] flex-col rounded-xl border border-[#e6e1d9] bg-white p-4 shadow-sm md:min-h-0 md:p-5`}>
           <div className="mb-5 flex items-center justify-between">
             <h1 className="text-xl font-bold">메모</h1>
             <span className="text-sm text-[#6f6258]">{visibleNotes.length} 메모</span>
@@ -225,19 +237,20 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
               loading={notesApi.loading}
               searchTerm={search}
               importantNoteIds={importantNoteIds}
-              onSelect={notesApi.setSelectedNoteId}
+              onSelect={selectNote}
             />
           </div>
 
         </aside>
 
-        <section className="min-h-[680px] overflow-hidden rounded-xl border border-[#e6e1d9] bg-white shadow-sm">
+        <section className={`${mobileEditorOpen ? "block" : "hidden md:block"} min-h-[calc(100vh-88px)] overflow-hidden rounded-xl border border-[#e6e1d9] bg-white shadow-sm md:min-h-[680px]`}>
           {notesApi.error ? <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{notesApi.error}</div> : null}
           <NoteEditor
             note={selectedNote}
             folders={folders}
             trashMode={trashMode}
             important={selectedNote ? importantNoteIds.includes(selectedNote.id) : false}
+            onBack={() => setMobileEditorOpen(false)}
             onToggleImportant={toggleImportant}
             onUpdate={notesApi.updateNote}
             onDelete={deleteNote}
@@ -248,7 +261,7 @@ export function AppShell({ initialTrash = false }: AppShellProps) {
       </section>
 
       <button
-        className="fixed bottom-6 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-[#00a82d] text-white shadow-[0_16px_40px_rgba(0,168,45,0.35)] transition hover:bg-[#008f26]"
+        className={`${mobileEditorOpen ? "hidden md:flex" : "flex"} fixed bottom-5 right-5 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#00a82d] text-white shadow-[0_16px_40px_rgba(0,168,45,0.35)] transition hover:bg-[#008f26]`}
         onClick={() => void createNote()}
         title="빠른 메모"
         type="button"

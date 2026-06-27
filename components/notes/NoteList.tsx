@@ -41,7 +41,7 @@ export function NoteList({ notes, selectedNoteId, loading, searchTerm = "", impo
 
         return (
           <button
-            className={`mb-3 w-full rounded-lg border p-5 text-left transition ${
+            className={`mb-2 w-full rounded-lg border p-4 text-left transition sm:mb-3 sm:p-5 ${
               selectedNoteId === note.id ? "border-[#6476ff] bg-white shadow-sm" : "border-transparent bg-white hover:border-[#e6e1d9]"
             }`}
             key={note.id}
@@ -53,8 +53,8 @@ export function NoteList({ notes, selectedNoteId, loading, searchTerm = "", impo
               {isImportant ? <Star size={15} className="fill-[#f4b400] text-[#f4b400]" /> : null}
               {note.is_pinned ? <Pin size={15} className="fill-[#00a82d] text-[#00a82d]" /> : null}
             </div>
-            <p className="mt-3 line-clamp-2 text-sm text-[#6f6258]">{highlight(preview, searchTerm)}</p>
-            <p className="mt-4 text-xs text-[#6f6258]">{formatDate(note.updated_at)}</p>
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#6f6258] sm:mt-3">{highlight(preview, searchTerm)}</p>
+            <p className="mt-3 text-xs text-[#6f6258] sm:mt-4">{formatDate(note.updated_at)}</p>
           </button>
         );
       })}
