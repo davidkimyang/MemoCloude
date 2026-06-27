@@ -1,19 +1,5 @@
 import Link from "next/link";
-import {
-  AlignLeft,
-  Bold,
-  Calendar,
-  CheckCircle2,
-  Cloud,
-  FilePlus2,
-  Italic,
-  Link2,
-  List,
-  Mic,
-  Paperclip,
-  Sparkles,
-  Underline
-} from "lucide-react";
+import { Cloud, FilePlus2 } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -50,14 +36,6 @@ export default function HomePage() {
             <p className="mt-2 text-sm text-[#6f6258]">마지막 동기화: 지금</p>
           </div>
 
-          <div className="mt-64 space-y-3">
-            <p className="text-xs font-semibold text-[#6f6258]">추가 기능</p>
-            <div className="rounded-xl border border-[#e6e1d9] bg-white p-5 shadow-sm">
-              <Sparkles className="text-[#289fd7]" size={20} />
-              <h3 className="mt-3 font-bold">AI 편집</h3>
-              <p className="mt-2 text-sm leading-6 text-[#4f4f4f]">메모를 작성하고 다듬는 데 도움을 주는 AI 어시스턴트입니다.</p>
-            </div>
-          </div>
         </aside>
 
         <section className="relative overflow-hidden rounded-xl border border-[#e6e1d9] bg-white shadow-sm">
@@ -68,21 +46,6 @@ export default function HomePage() {
               자동 저장
             </span>
           </div>
-          <div className="flex h-14 items-center gap-4 border-b border-[#f1eee8] px-5 text-[#a5a5a5]">
-            <span className="text-sm">삽입</span>
-            <Mic size={18} />
-            <CheckCircle2 size={18} />
-            <Calendar size={18} />
-            <span className="h-5 w-px bg-[#dedbd5]" />
-            <Bold size={18} />
-            <Italic size={18} />
-            <Underline size={18} />
-            <List size={18} />
-            <Link2 size={18} />
-            <AlignLeft size={18} />
-            <Paperclip size={18} />
-          </div>
-
           <div className="mx-auto mt-32 max-w-[760px] px-8">
             <h2 className="text-center text-4xl font-black tracking-normal">온라인 메모장 ✨</h2>
             <p className="mt-6 text-center text-base leading-7 text-[#171717]">
@@ -105,4 +68,3 @@ export default function HomePage() {
     </main>
   );
 }
-
