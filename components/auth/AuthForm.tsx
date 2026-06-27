@@ -22,14 +22,6 @@ function GoogleMark() {
   );
 }
 
-function KakaoMark() {
-  return (
-    <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-[#191919] text-[11px] font-black leading-none text-[#fee500]">
-      K
-    </span>
-  );
-}
-
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -83,8 +75,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/app`,
-        scopes: provider === "kakao" ? "profile_nickname profile_image" : undefined
+        redirectTo: `${window.location.origin}/app`
       }
     });
 
@@ -156,24 +147,15 @@ export function AuthForm({ mode }: AuthFormProps) {
             <span className="h-px flex-1 bg-[#cfcfcf]" />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div>
             <button
-              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333] transition hover:bg-[#fbfaf7] disabled:opacity-60"
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-md border border-[#d8d8d8] bg-white font-semibold text-[#333] transition hover:bg-[#fbfaf7] disabled:opacity-60"
               disabled={loading || Boolean(oauthLoading)}
               onClick={() => void signInWithProvider("google")}
               type="button"
             >
               {oauthLoading === "google" ? <Loader2 className="animate-spin" size={18} /> : <GoogleMark />}
               Google로 계속하기
-            </button>
-            <button
-              className="flex h-12 items-center justify-center gap-3 rounded-md border border-[#fee500] bg-[#fee500] font-semibold text-[#191919] transition hover:bg-[#f4dc00] disabled:opacity-60"
-              disabled={loading || Boolean(oauthLoading)}
-              onClick={() => void signInWithProvider("kakao")}
-              type="button"
-            >
-              {oauthLoading === "kakao" ? <Loader2 className="animate-spin" size={18} /> : <KakaoMark />}
-              Kakao로 계속하기
             </button>
           </div>
 
