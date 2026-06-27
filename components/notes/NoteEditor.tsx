@@ -1,7 +1,7 @@
 "use client";
 
-import { type MouseEvent, useEffect, useRef, useState } from "react";
-import { AlignLeft, Bold, CheckCircle2, Italic, Link2, List, Pin, Save, Star, Trash2, Underline } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Pin, Save, Star, Trash2 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { Folder, Note } from "@/lib/types";
 import { titleFromContent } from "@/lib/utils";
@@ -126,32 +126,6 @@ export function NoteEditor({
     setContent(html);
   }
 
-  function runCommand(command: string, value?: string) {
-    if (trashMode) return;
-    editorRef.current?.focus();
-    document.execCommand(command, false, value);
-    syncEditorContent();
-  }
-
-  function insertChecklist() {
-    if (trashMode) return;
-    editorRef.current?.focus();
-    document.execCommand("insertHTML", false, '<div class="check-line">☐ 체크 항목</div>');
-    syncEditorContent();
-  }
-
-  function createLink() {
-    if (trashMode) return;
-    editorRef.current?.focus();
-    const url = window.prompt("링크 주소를 입력하세요", "https://");
-    if (!url) return;
-    runCommand("createLink", url);
-  }
-
-  function toolbarMouseDown(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-  }
-
   if (!note) {
     return (
       <section className="flex h-full items-center justify-center bg-white px-6 text-center">
@@ -203,32 +177,6 @@ export function NoteEditor({
             </>
           )}
         </div>
-      </div>
-
-      <div className="flex h-12 items-center gap-2 border-b border-[#f1eee8] px-5 text-[#777]">
-        <span className="mr-2 text-sm text-[#9b9b9b]">편집</span>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={insertChecklist} onMouseDown={toolbarMouseDown} title="체크 항목" type="button">
-          <CheckCircle2 size={17} />
-        </button>
-        <span className="mx-1 h-5 w-px bg-[#dedbd5]" />
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => runCommand("bold")} onMouseDown={toolbarMouseDown} title="굵게" type="button">
-          <Bold size={17} />
-        </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => runCommand("italic")} onMouseDown={toolbarMouseDown} title="기울임" type="button">
-          <Italic size={17} />
-        </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => runCommand("underline")} onMouseDown={toolbarMouseDown} title="밑줄" type="button">
-          <Underline size={17} />
-        </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => runCommand("insertUnorderedList")} onMouseDown={toolbarMouseDown} title="목록" type="button">
-          <List size={17} />
-        </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={createLink} onMouseDown={toolbarMouseDown} title="링크" type="button">
-          <Link2 size={17} />
-        </button>
-        <button className="rounded-md p-2 hover:bg-[#fbfaf7]" onClick={() => runCommand("formatBlock", "blockquote")} onMouseDown={toolbarMouseDown} title="인용" type="button">
-          <AlignLeft size={17} />
-        </button>
       </div>
 
       <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col overflow-hidden px-8 py-20">
